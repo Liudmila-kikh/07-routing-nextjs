@@ -1,51 +1,88 @@
-// components/NoteList/NoteList.tsx
+"use client";
 
-import css from './NoteList.module.css';
-import { type Note } from '../../types/note';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
-import { deleteNote } from '@/lib/api';
-import { toast } from 'react-hot-toast';
-import Loading from '@/app/loading';
-import Link from 'next/link';
+import css from "./NoteList.module.css";
+import type { Note } from "../../types/note";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteNote } from "@/lib/api";
+import toast from "react-hot-toast";
+import Link from "next/link";
 
 interface NoteListProps {
   notes: Note[];
 }
 
-export default function NoteList({ notes }: NoteListProps) {
+const NoteList: React.FC<NoteListProps> = ({ notes }) => {
   const queryClient = useQueryClient();
 
-  const toBeDeletedNote = useMutation({
-    mutationFn: (id: Note['id']) => deleteNote(id),
+  const mutation = useMutation({
+    mutationFn: deleteNote,
+
+    onMutate: () => {
+      toast.dismiss(); 
+    },
+
     onSuccess: () => {
-      toast('Note deleted!', { duration: 1500, position: 'bottom-right' });
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      toast.success("Note deleted successfully");
+    },
+
+    onError: (error) => {
+      if (error instanceof Error) {
+        toast.error(`Failed to delete note: ${error.message}`);
+      } else {
+        toast.error("An error occurred while deleting the note. Please try again.");
+      }
     },
   });
 
-  const handleToBeDeletedNote = (id: Note['id']) => {
-    toBeDeletedNote.mutate(id);
+  const handleDelete = (noteId: string) => {
+    const isConfirmed = confirm("Are you sure you want to delete this note?");
+    if (isConfirmed) {
+      mutation.mutate(noteId);
+    }
   };
 
   return (
     <ul className={css.list}>
-      {notes.map((note: Note) => (
-        <li key={note.id} className={css.listItem}>
-          {toBeDeletedNote.isPending && <Loading />}
+      {notes.map((note) => (
+        <li
+          key={note.id}
+          className={`${css.listItem} ${
+            mutation.variables === note.id && mutation.status === "pending"
+              ? css.deleting
+              : ""
+          }`}
+        >
           <h2 className={css.title}>{note.title}</h2>
           <p className={css.content}>{note.content}</p>
           <div className={css.footer}>
             <span className={css.tag}>{note.tag}</span>
-            <Link href={`/notes/${note.id}`}>View details</Link>
+            <Link 
+              className={css.link} 
+              href={`/notes/${note.id}`}
+              scroll={false}
+            >
+              View details
+            </Link>
+
             <button
               className={css.button}
-              onClick={() => handleToBeDeletedNote(note.id)}
+              onClick={() => handleDelete(note.id)}
+              disabled={
+                mutation.variables === note.id &&
+                mutation.status === "pending"
+              }
             >
-              Delete
+              {mutation.variables === note.id &&
+              mutation.status === "pending"
+                ? "Deleting..."
+                : "Delete"}
             </button>
           </div>
         </li>
       ))}
     </ul>
   );
-}
+};
+
+export default NoteList;

@@ -1,21 +1,18 @@
-// components/Footer/Footer.tsx
-import css from './Footer.module.css';
+import css from './Footer.module.css'
 
-const Footer = () => {
-  return (
-    <footer className={css.footer}>
-      <div className={css.content}>
-        <p>© {new Date().getFullYear()} NoteHub. All rights reserved.</p>
-        <div className={css.wrap}>
-          <p>Developer: Yevhenii Bilotserkivskyi</p>
-          <p>
-            Contact us:
-            <a href="mailto:student@notehub.app"> student@notehub.app</a>
-          </p>
-        </div>
-      </div>
-    </footer>
-  );
-};
-
-export default Footer;
+export default function Footer(){
+    return(
+<footer className={css.footer}>
+    <div className={css.content}>
+    <p>© {new Date().getFullYear()} NoteHub. All rights reserved.</p>
+    <div className={css.wrap}>
+        <p>Developer: Ilona Chornii</p>
+        <p>
+        Contact us:
+        <a href="mailto:ilonachorniy26@gmail.com"> ilonachorniy26@gmail.com</a>
+        </p>
+    </div>
+    </div>
+</footer>
+    )
+}

@@ -1,48 +1,69 @@
-import css from './Modal.module.css';
-//import { type Note } from '../../types/note';
-import { useEffect } from 'react';
-import { createPortal } from 'react-dom';
+"use client";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
+import css from "./Modal.module.css";
 
 interface ModalProps {
-  //note: Note | null;
-  onClose: () => void;
+  onClose?: () => void;
   children: React.ReactNode;
 }
 
-export default function Modal({ onClose, children }: ModalProps) {
-  const handleModalBackdropClick = (
-    event: React.MouseEvent<HTMLDivElement>
-  ) => {
-    if (event.target === event.currentTarget) {
+const Modal: React.FC<ModalProps> = ({ onClose, children }) => {
+  const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
+  const router = useRouter();
+
+  const handleClose = useCallback(() => {
+    if (onClose) {
       onClose();
+    } else {
+      router.back();
     }
-  };
+  }, [onClose, router]);
 
   useEffect(() => {
-    const handleKeyDown = (ev: KeyboardEvent) => {
-      if (ev.key === 'Escape') {
-        onClose();
+    setModalRoot(document.getElementById("modal-root"));
+
+    document.body.classList.add("modal-open");
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.classList.remove("modal-open");
     };
-  }, [onClose]);
+  }, [handleClose]);
+
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
+
+  if (!modalRoot) return null;
 
   return createPortal(
     <div
       className={css.backdrop}
       role="dialog"
       aria-modal="true"
-      onClick={handleModalBackdropClick}
+      onClick={handleBackdropClick}
     >
-      <div className={css.modal}>{children}</div>
+      <div
+        className={css.modal}
+        onClick={(e) => e.stopPropagation()} 
+      >
+        {children}
+      </div>
     </div>,
-    document.body
+    modalRoot
   );
-}
+};
+
+export default Modal;
