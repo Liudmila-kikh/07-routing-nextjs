@@ -6,9 +6,9 @@ import { createNote, type CreateNoteData } from "@/lib/api";
 import type { NoteTag } from "../../types/note";
 
 interface NoteFormProps {
-  isLoading?: boolean; 
   onCancel: () => void;
 }
+
 
 const validationSchema = Yup.object().shape({
   title: Yup.string()
