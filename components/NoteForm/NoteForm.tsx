@@ -3,6 +3,7 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import * as Yup from "yup";
 import { createNote } from "@/lib/api";
 import css from "./NoteForm.module.css";
+import { NoteTag, CreateNoteData } from "@/types/note";
 
 interface NoteFormProps {
   onCancel: () => void;
@@ -14,18 +15,16 @@ const validationSchema = Yup.object({
     .max(50, "Maximum 50 characters")
     .required("Title is required"),
   content: Yup.string().max(500, "Maximum 500 characters"),
-  tag: Yup.string()
-    .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"], "Invalid tag")
+  tag: Yup.mixed<NoteTag>()
+    .oneOf(Object.values(NoteTag), "Invalid tag")
     .required("Tag is required"),
 });
 
 export default function NoteForm({ onCancel }: NoteFormProps) {
   const queryClient = useQueryClient();
-  
 
   const mutation = useMutation({
-    mutationFn: (values: { title: string; content: string; tag: string }) =>
-      createNote(values),
+    mutationFn: (values: CreateNoteData) => createNote(values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       onCancel();
@@ -34,7 +33,7 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
 
   return (
     <Formik
-      initialValues={{ title: "", content: "", tag: "" }}
+      initialValues={{ title: "", content: "", tag: NoteTag.Todo }}
       validationSchema={validationSchema}
       onSubmit={(values, { resetForm }) => {
         mutation.mutate(values);
@@ -68,12 +67,11 @@ export default function NoteForm({ onCancel }: NoteFormProps) {
           <div className={css.formGroup}>
             <label htmlFor="tag">Tag</label>
             <Field as="select" id="tag" name="tag" className={css.select}>
-              <option value="">Select tag</option>
-              <option value="Todo">Todo</option>
-              <option value="Work">Work</option>
-              <option value="Personal">Personal</option>
-              <option value="Meeting">Meeting</option>
-              <option value="Shopping">Shopping</option>
+              {Object.values(NoteTag).map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
             </Field>
             <ErrorMessage name="tag" component="span" className={css.error} />
           </div>
