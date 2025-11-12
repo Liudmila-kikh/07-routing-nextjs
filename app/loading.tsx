@@ -1,5 +1,3 @@
-export default function Loader(){
-    return(
-        <p>Loading, please wait...</p>
-    )
+export default function Loading() {
+  return <p>Loading, please wait...</p>;
 }

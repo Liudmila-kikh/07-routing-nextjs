@@ -14,10 +14,3 @@ export enum NoteTag {
   Shopping = "Shopping",
   Todo = "Todo",
 }
-
-export interface CreateNoteData {
-  title: string;
-  content: string;
-  tag: NoteTag;
-}
-

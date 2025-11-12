@@ -1,54 +1,54 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import css from "./NotePreview.module.css";
 import { useParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { fetchNoteById } from "@/lib/api";
-import type { Note } from "@/types/note";
-import css from './NotePreview.module.css';
+import Loader from "@/app/loading";
 import Modal from "@/components/Modal/Modal";
 
-export default function NotePreviewClient() {
-  const params = useParams();
+const NotePreview = () => {
+  const { id } = useParams<{ id: string }>();
+
   const router = useRouter();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const close = () => router.back();
 
   const {
     data: note,
     isLoading,
     error,
-  } = useQuery<Note, Error>({
+  } = useQuery({
     queryKey: ["note", id],
-    queryFn: () => fetchNoteById(id!),
-    enabled: Boolean(id),
+    queryFn: () => fetchNoteById(id),
     refetchOnMount: false,
+    enabled: !!id,
   });
 
-  if (isLoading) return (
-    <Modal onClose={() => router.back()}>
-      <p>Loading, please wait...</p>
-    </Modal>
-  );
+  if (isLoading) return <Loader />;
 
-  if (error || !note) return (
-    <Modal onClose={() => router.back()}>
-      <p>Something went wrong.</p>
-    </Modal>
-  );
+  if (error || !note) return <p>Something went wrong.</p>;
+
+  const formattedDate = note.updatedAt
+    ? `Updated at: ${note.updatedAt}`
+    : `Created at: ${note.createdAt}`;
 
   return (
-    <Modal onClose={() => router.back()}>
+    <Modal onClose={close}>
+      <button onClick={close} className={css.backBtn} type="button">
+        Go Back
+      </button>
       <div className={css.container}>
         <div className={css.item}>
           <div className={css.header}>
             <h2>{note.title}</h2>
           </div>
           <p className={css.content}>{note.content}</p>
-          <p className={css.date}>
-            Created: {new Date(note.createdAt).toLocaleDateString()}
-          </p>
-          <button className={css.backBtn} onClick={() => router.back()}>Закрити</button>
+          <p className={css.tag}>{note.tag}</p>
+          <p className={css.date}>{formattedDate}</p>
         </div>
       </div>
     </Modal>
   );
-}
+};
+
+export default NotePreview;

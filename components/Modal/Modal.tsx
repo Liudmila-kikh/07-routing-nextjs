@@ -1,52 +1,37 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import css from "./Modal.module.css";
 
 interface ModalProps {
-  onClose?: () => void;
+  onClose: () => void;
   children: React.ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({ onClose, children }) => {
-  const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
-  const router = useRouter();
-
-  const handleClose = useCallback(() => {
-    if (onClose) {
-      onClose();
-    } else {
-      router.back();
-    }
-  }, [onClose, router]);
-
+export default function Modal({ onClose, children }: ModalProps) {
   useEffect(() => {
-    setModalRoot(document.getElementById("modal-root"));
-
-    document.body.classList.add("modal-open");
+    const prevOverflow = document.body.style.overflow;
+    // блокувати прокрутку
+    document.body.style.overflow = "hidden";
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        handleClose();
+        onClose();
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      document.body.classList.remove("modal-open");
+      // відновити попереднє значення overflow
+      document.body.style.overflow = prevOverflow;
     };
-  }, [handleClose]);
+  }, [onClose]);
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
-      handleClose();
+      onClose();
     }
   };
-
-  if (!modalRoot) return null;
 
   return createPortal(
     <div
@@ -55,15 +40,8 @@ const Modal: React.FC<ModalProps> = ({ onClose, children }) => {
       aria-modal="true"
       onClick={handleBackdropClick}
     >
-      <div
-        className={css.modal}
-        onClick={(e) => e.stopPropagation()} 
-      >
-        {children}
-      </div>
+      <div className={css.modal}>{children}</div>
     </div>,
-    modalRoot
+    document.body
   );
-};
-
-export default Modal;
+}

@@ -89,4 +89,3 @@ export default function NotesClient({ search, page, tag }: Props) {
     </>
   );
 }
-
